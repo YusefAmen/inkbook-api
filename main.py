@@ -27,8 +27,12 @@ app.add_middleware(
 async def health_check():
     return {"status": "ok", "message": "InkBook API is running"}
 
-app.include_router(appointments_router, prefix="/appointments", tags=["appointments"])
-app.include_router(portfolio_router, prefix="/portfolio", tags=["portfolio"])
+app.include_router(
+    appointments_router, prefix="/appointments", tags=["appointments"]
+)
+app.include_router(
+    portfolio_router, prefix="/portfolio", tags=["portfolio"]
+)
 
 if __name__ == "__main__":
     import uvicorn
