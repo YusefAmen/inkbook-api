@@ -23,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def health_check():
     return {"status": "ok", "message": "InkBook API is running"}
