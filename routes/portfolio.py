@@ -23,5 +23,5 @@ async def upload_portfolio_item(item: PortfolioUpload):
     """
     raise HTTPException(
         status_code=501,
-        detail="Portfolio upload functionality is not implemented yet"
+        detail="Portfolio upload functionality is not implemented yet",
     )

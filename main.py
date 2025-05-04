@@ -11,7 +11,7 @@ load_dotenv()
 app = FastAPI(
     title="InkBook API",
     description="Backend API for InkBook - Tattoo Artist Management Platform",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Configure CORS
@@ -28,18 +28,24 @@ app.add_middleware(
 async def health_check():
     return {"status": "ok", "message": "InkBook API is running"}
 
+
 app.include_router(
-    appointments_router, prefix="/appointments", tags=["appointments"]
+    appointments_router,
+    prefix="/appointments",
+    tags=["appointments"],
 )
 app.include_router(
-    portfolio_router, prefix="/portfolio", tags=["portfolio"]
+    portfolio_router,
+    prefix="/portfolio",
+    tags=["portfolio"],
 )
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True
+        reload=True,
     )

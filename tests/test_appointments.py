@@ -1,7 +1,8 @@
-from fastapi.testclient import TestClient
 from datetime import datetime
-from main import app
 
+from fastapi.testclient import TestClient
+
+from main import app
 
 client = TestClient(app)
 
@@ -11,7 +12,7 @@ def test_health_check():
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "message": "InkBook API is running"
+        "message": "InkBook API is running",
     }
 
 
@@ -20,7 +21,7 @@ def test_create_appointment():
         "client_name": "Test User",
         "email": "test@example.com",
         "date": datetime.now().isoformat(),
-        "notes": "Test appointment"
+        "notes": "Test appointment",
     }
     response = client.post("/appointments/", json=appointment_data)
     assert response.status_code == 200
