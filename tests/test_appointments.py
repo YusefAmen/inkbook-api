@@ -1,4 +1,4 @@
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClien
 from datetime import datetime
 from main import app
 
@@ -26,4 +26,4 @@ def test_create_appointment():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
-    assert "data" in data 
+    assert "data" in data

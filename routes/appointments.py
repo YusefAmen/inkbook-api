@@ -39,4 +39,4 @@ async def create_appointment(appointment: AppointmentCreate):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
