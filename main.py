@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from routes.appointments import router as appointments_router
+from routes.portfolio import router as portfolio_router
 
 # Load environment variables
 load_dotenv()
@@ -25,12 +27,14 @@ app.add_middleware(
 async def health_check():
     return {"status": "ok", "message": "InkBook API is running"}
 
-from routes.appointments import router as appointments_router
-from routes.portfolio import router as portfolio_router
-
 app.include_router(appointments_router, prefix="/appointments", tags=["appointments"])
 app.include_router(portfolio_router, prefix="/portfolio", tags=["portfolio"])
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    ) 

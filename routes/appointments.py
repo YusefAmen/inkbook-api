@@ -27,7 +27,10 @@ async def create_appointment(appointment: AppointmentCreate):
         }).execute()
 
         if not response.data:
-            raise HTTPException(status_code=400, detail="Failed to create appointment")
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to create appointment"
+            )
 
         return {
             "status": "success",
