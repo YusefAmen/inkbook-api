@@ -3,13 +3,16 @@ from pydantic import BaseModel
 from datetime import datetime
 from db.supabase_client import supabase
 
+
 router = APIRouter()
+
 
 class AppointmentCreate(BaseModel):
     client_name: str
     email: str
     date: datetime
     notes: str | None = None
+
 
 @router.post("/")
 async def create_appointment(appointment: AppointmentCreate):

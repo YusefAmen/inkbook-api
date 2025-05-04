@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import os
 
 # Load environment variables
 load_dotenv()
@@ -22,12 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health check endpoint
 @app.get("/")
 async def health_check():
     return {"status": "ok", "message": "InkBook API is running"}
 
-# Import and include routers
 from routes.appointments import router as appointments_router
 from routes.portfolio import router as portfolio_router
 

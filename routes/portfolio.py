@@ -1,13 +1,16 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+
 router = APIRouter()
+
 
 class PortfolioUpload(BaseModel):
     title: str
     description: str
     style: str
     # Image handling will be implemented later
+
 
 @router.post("/")
 async def upload_portfolio_item(item: PortfolioUpload):
