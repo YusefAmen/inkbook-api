@@ -1,16 +1,19 @@
 import os
-from supabase import create_client
-from dotenv import load_dotenv
+from typing import Generator
 
-load_dotenv()
+from supabase import create_client, Client
 
-# Initialize Supabase client
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-
-if not supabase_url or not supabase_key:
-    raise ValueError("Missing Supabase credentials")
-
-supabase = create_client(supabase_url, supabase_key)
+def get_supabase_client() -> Generator[Client, None, None]:
+    """
+    Dependency for getting a Supabase client instance.
+    """
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    
+    if not url or not key:
+        raise ValueError("Missing Supabase credentials")
+        
+    client = create_client(url, key)
+    yield client
 
 print("Supabase client created successfully!")

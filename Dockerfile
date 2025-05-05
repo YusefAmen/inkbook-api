@@ -14,6 +14,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy the rest of the code
 COPY . .
 
+# Install the package in development mode
+RUN pip install -e .
+
 # Accept build args
 ARG SUPABASE_URL
 ARG SUPABASE_SERVICE_ROLE_KEY
@@ -28,6 +31,7 @@ ENV SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 ENV DATABASE_URL=$DATABASE_URL
 ENV ENVIRONMENT=$ENVIRONMENT
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8000

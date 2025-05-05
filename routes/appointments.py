@@ -1,15 +1,15 @@
 from datetime import datetime
-from typing import Optional, List
-from uuid import UUID, uuid4
-import logging
+from typing import List, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 
-from db.supabase_client import supabase
+from db.supabase_client import get_supabase_client
 
 router = APIRouter()
 
+# Models
 class ClientBase(BaseModel):
     name: str
     email: EmailStr
@@ -21,12 +21,12 @@ class ClientCreate(ClientBase):
 class Client(ClientBase):
     id: UUID
     created_at: datetime
-    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 class AppointmentBase(BaseModel):
+    client_id: UUID
     date: datetime
     start_time: str
     end_time: str
@@ -37,114 +37,77 @@ class AppointmentBase(BaseModel):
     price: str
     deposit: str
     special_instructions: Optional[str] = None
-    reference_images: Optional[List[str]] = None
 
 class AppointmentCreate(AppointmentBase):
-    client_id: UUID
+    pass
 
 class Appointment(AppointmentBase):
     id: UUID
-    client_id: UUID
-    status: str
     created_at: datetime
-    updated_at: datetime
+    status: str = "scheduled"
 
     class Config:
         from_attributes = True
 
+# Endpoints
 @router.post("/clients/", response_model=Client)
-async def create_client(client: ClientCreate):
+async def create_client(client: ClientCreate, supabase=Depends(get_supabase_client)):
     try:
-        # Insert client into Supabase
-        response = supabase.table("clients").insert(
-            {
-                "name": client.name,
-                "email": client.email,
-                "phone": client.phone,
-            }
-        ).execute()
-
+        response = supabase.table("clients").insert(client.model_dump()).execute()
         if not response.data:
-            raise HTTPException(
-                status_code=400,
-                detail="Failed to create client",
-            )
-
+            raise HTTPException(status_code=500, detail="Failed to create client")
         return response.data[0]
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/appointments", status_code=status.HTTP_201_CREATED)
-async def create_appointment(appointment: AppointmentCreate):
+@router.get("/clients/", response_model=List[Client])
+async def get_clients(supabase=Depends(get_supabase_client)):
     try:
-        data = appointment.dict()
-        response = supabase.table("appointments").insert(data).execute()
-        if response.error:
-            logging.error(f"Supabase error: {response.error}")
-            raise HTTPException(status_code=500, detail="Failed to create appointment")
-        return {"status": "success", "data": response.data}
+        response = supabase.table("clients").select("*").execute()
+        return response.data
     except Exception as e:
-        logging.error(f"Exception: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/clients/{client_id}", response_model=Client)
-async def get_client(client_id: UUID):
+async def get_client(client_id: UUID, supabase=Depends(get_supabase_client)):
     try:
         response = supabase.table("clients").select("*").eq("id", str(client_id)).execute()
-        
         if not response.data:
-            raise HTTPException(
-                status_code=404,
-                detail="Client not found",
-            )
-            
+            raise HTTPException(status_code=404, detail="Client not found")
         return response.data[0]
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/clients/{client_id}/appointments", response_model=List[Appointment])
-async def get_client_appointments(client_id: UUID):
+@router.post("/appointments", response_model=Appointment)
+async def create_appointment(appointment: AppointmentCreate, supabase=Depends(get_supabase_client)):
     try:
-        response = supabase.table("appointments").select("*").eq("client_id", str(client_id)).execute()
-        return response.data
-        
+        # Verify client exists
+        client_response = supabase.table("clients").select("*").eq("id", str(appointment.client_id)).execute()
+        if not client_response.data:
+            raise HTTPException(status_code=404, detail="Client not found")
+
+        # Create appointment
+        response = supabase.table("appointments").insert(appointment.model_dump()).execute()
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Failed to create appointment")
+        return response.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/appointments", response_model=List[Appointment])
-async def get_appointments():
+@router.get("/appointments/", response_model=List[Appointment])
+async def get_appointments(supabase=Depends(get_supabase_client)):
     try:
         response = supabase.table("appointments").select("*").execute()
-        if response.error:
-            logging.error(f"Supabase error: {response.error}")
-            raise HTTPException(status_code=500, detail="Failed to fetch appointments")
         return response.data
     except Exception as e:
-        logging.error(f"Exception: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/appointments/{appointment_id}", response_model=Appointment)
-async def get_appointment(appointment_id: str):
+async def get_appointment(appointment_id: UUID, supabase=Depends(get_supabase_client)):
     try:
-        response = supabase.table("appointments").select("*").eq("id", appointment_id).single().execute()
-        if response.error:
-            logging.error(f"Supabase error: {response.error}")
+        response = supabase.table("appointments").select("*").eq("id", str(appointment_id)).execute()
+        if not response.data:
             raise HTTPException(status_code=404, detail="Appointment not found")
-        return response.data
+        return response.data[0]
     except Exception as e:
-        logging.error(f"Exception: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-@router.delete("/appointments/{appointment_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_appointment(appointment_id: str):
-    try:
-        response = supabase.table("appointments").delete().eq("id", appointment_id).execute()
-        if response.error:
-            logging.error(f"Supabase error: {response.error}")
-            raise HTTPException(status_code=404, detail="Appointment not found")
-        return {"status": "success"}
-    except Exception as e:
-        logging.error(f"Exception: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))

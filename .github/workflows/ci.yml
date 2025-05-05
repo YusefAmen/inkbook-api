@@ -44,8 +44,10 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-            ENVIRONMENT=${{ env.ENVIRONMENT }}") \
-            ${{ secrets.DOCKERHUB_USERNAME }}/inkbook-api:latest pytest
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            PYTHONPATH=/app") \
+            ${{ secrets.DOCKERHUB_USERNAME }}/inkbook-api:latest \
+            pytest -v
       
       - name: Push Docker image
         run: |
