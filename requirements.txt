@@ -1,14 +1,16 @@
+# Requires Python 3.11.x
 fastapi==0.109.2
 uvicorn==0.27.1
-python-dotenv==1.0.1
-supabase==2.3.4
+python-dotenv
+supabase==1.2.0
+httpx==0.24.1
 pydantic==2.6.1
 python-multipart==0.0.9
+email-validator>=2.1.0
 
 # Testing
 pytest==8.0.0
 pytest-cov==4.1.0
-httpx==0.24.0,<0.26.0
 
 # Linting
 flake8==7.0.0

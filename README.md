@@ -1,5 +1,8 @@
 # InkBook API – Backend MVP
 
+  ## Python Version
+  This project requires Python 3.11.x. Use pyenv or your preferred environment manager to install and activate this version.
+
 This is the backend for **InkBook**, a SaaS platform for tattoo artists and studios. It powers client booking, image uploads, and reminder logic. The frontend is built in **Next.js**, using **Supabase** for authentication and storage, and deployed via **Vercel**.
 
 ## 🤖 Cursor Agent Instruction
@@ -336,6 +339,63 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support, email support@inkbook.com or join our Discord community.
+
+# Inkbook API - Dockerized Development
+
+## Prerequisites
+- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/)
+- (Optional) [Supabase CLI](https://supabase.com/docs/guides/cli) if you want to run Supabase locally
+
+## Environment Variables
+Create a `.env.docker` file in this directory with the following structure:
+
+```
+# Supabase connection (use your real project values or local Supabase if running)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Postgres connection (if your app uses direct DB access)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=inkbook
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+# Add any other environment variables your app needs
+```
+
+**Never commit secrets!**
+
+## Build and Run
+
+```sh
+docker compose up --build
+```
+- The API will be available at [http://localhost:8000](http://localhost:8000)
+- Code changes will hot-reload automatically.
+
+## Stopping
+```sh
+docker compose down
+```
+
+## Connecting to Supabase
+- For cloud Supabase, use your project URL and keys in `.env.docker`.
+- For local Supabase, run the Supabase CLI on your host and point the API to the local endpoints.
+
+## Database
+- A local Postgres container is included for development.
+- Data is persisted in a Docker volume (`pgdata`).
+
+## Running Tests
+You can run tests inside the container:
+```sh
+docker compose exec api pytest
+```
+
+---
+
+**For production, use a separate Dockerfile without --reload and with stricter dependency pinning.**
 
 
 
