@@ -1,8 +1,6 @@
 name: CD
 
 on:
-  push:
-    branches: [ main , develop]
   workflow_run:
     workflows: ["CI"]
     types:
@@ -12,42 +10,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/inkbook-api:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/inkbook-api:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    
-    - name: Deploy to Production
+    - name: Pull Docker image from Docker Hub
+      run: |
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/inkbook-api:${{ github.sha }}
+    - name: Deploy to Environment
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/inkbook-api:${{ github.sha }}
+        GITHUB_REF: ${{ github.ref }}
       run: |
-        # Add your deployment commands here
-        # For example, if using a cloud provider:
-        # - Configure cloud provider CLI
-        # - Deploy Docker image to cloud platform
-        echo "Deployment completed successfully"
-        
+        if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+          echo "Deploying to production"
+          # production deploy command here
+        elif [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
+          echo "Deploying to staging"
+          # staging deploy command here
+        else
+          echo "Not a deployable branch: $GITHUB_REF"
+        fi
     - name: Notify Deployment Status
       if: always()
       uses: rtCamp/action-slack-notify@v2
@@ -56,5 +39,5 @@ jobs:
         SLACK_CHANNEL: deployments
         SLACK_COLOR: ${{ job.status }}
         SLACK_TITLE: Deployment Status
-        SLACK_MESSAGE: 'Deployment to production ${{ job.status }}'
+        SLACK_MESSAGE: 'Deployment to ${{ github.ref }} ${{ job.status }}'
         SLACK_FOOTER: 'InkBook API' 

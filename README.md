@@ -1,3 +1,122 @@
+# InkBook API – Backend MVP (Docker-First)
+
+## 🚀 Quick Start (Docker Compose)
+
+1. **Copy and configure environment variables:**
+   ```sh
+   cp .env.example .env.docker
+   # Edit .env.docker with your Supabase and Postgres credentials
+   ```
+
+2. **Build and run the API and Postgres:**
+   ```sh
+   docker compose up --build
+   ```
+   - The API will be available at [http://localhost:8000](http://localhost:8000)
+   - Code changes will hot-reload automatically.
+
+3. **Run tests inside the container:**
+   ```sh
+   docker compose exec api pytest
+   ```
+
+4. **Stop containers:**
+   ```sh
+   docker compose down
+   ```
+
+---
+
+## 🐳 Why Docker-First?
+- Ensures dev, CI/CD, and prod all use the same environment
+- No more local Python/venv setup required
+- Fast onboarding: just install Docker and go
+- Easy to extend for microservices and Kubernetes
+
+---
+
+## 🧱 Project Structure
+
+```
+inkbook-api/
+├── Dockerfile
+├── docker-compose.yml
+├── .env.docker
+├── main.py
+├── requirements.txt
+├── routes/
+├── db/
+└── ...
+```
+
+---
+
+## ⚙️ Environment Variables
+- Use `.env.docker` for all local and CI/CD runs
+- Example:
+  ```env
+  SUPABASE_URL=https://your-project.supabase.co
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+  POSTGRES_USER=postgres
+  POSTGRES_PASSWORD=postgres
+  POSTGRES_DB=inkbook
+  POSTGRES_HOST=db
+  POSTGRES_PORT=5432
+  ```
+- **Never commit secrets!**
+
+---
+
+## 🧪 CI/CD (GitHub Actions Example)
+
+Add this as `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inkbook
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: docker build -t inkbook-api .
+      - name: Run tests in container
+        run: |
+          docker run --env-file .env.docker --network host inkbook-api pytest
+```
+
+---
+
+## 📝 Notes
+- **Local Python/venv instructions are deprecated.** Use Docker Compose for all workflows.
+- For production, use a separate Dockerfile (no --reload, stricter pins).
+- For Supabase, use your cloud project or run the Supabase CLI locally and point the API to it.
+- Troubleshooting: If you hit port conflicts, stop other services or change ports in `docker-compose.yml`.
+
+---
+
+## 🆘 Support
+For support, email support@inkbook.com or join our Discord community.
+
 # InkBook API – Backend MVP
 
   ## Python Version
@@ -63,7 +182,7 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # API Configuration
 API_HOST=0.0.0.0
@@ -335,67 +454,6 @@ This `inkbook-api` repo is currently a monolith, but its structure is designed f
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support, email support@inkbook.com or join our Discord community.
-
-# Inkbook API - Dockerized Development
-
-## Prerequisites
-- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/)
-- (Optional) [Supabase CLI](https://supabase.com/docs/guides/cli) if you want to run Supabase locally
-
-## Environment Variables
-Create a `.env.docker` file in this directory with the following structure:
-
-```
-# Supabase connection (use your real project values or local Supabase if running)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Postgres connection (if your app uses direct DB access)
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=inkbook
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-
-# Add any other environment variables your app needs
-```
-
-**Never commit secrets!**
-
-## Build and Run
-
-```sh
-docker compose up --build
-```
-- The API will be available at [http://localhost:8000](http://localhost:8000)
-- Code changes will hot-reload automatically.
-
-## Stopping
-```sh
-docker compose down
-```
-
-## Connecting to Supabase
-- For cloud Supabase, use your project URL and keys in `.env.docker`.
-- For local Supabase, run the Supabase CLI on your host and point the API to the local endpoints.
-
-## Database
-- A local Postgres container is included for development.
-- Data is persisted in a Docker volume (`pgdata`).
-
-## Running Tests
-You can run tests inside the container:
-```sh
-docker compose exec api pytest
-```
-
----
-
-**For production, use a separate Dockerfile without --reload and with stricter dependency pinning.**
 
 
 
