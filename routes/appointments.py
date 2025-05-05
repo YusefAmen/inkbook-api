@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID, uuid4
+import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
 
 from db.supabase_client import supabase
@@ -74,38 +75,18 @@ async def create_client(client: ClientCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/", response_model=Appointment)
+@router.post("/appointments", status_code=status.HTTP_201_CREATED)
 async def create_appointment(appointment: AppointmentCreate):
     try:
-        # Insert appointment into Supabase
-        response = supabase.table("appointments").insert(
-            {
-                "client_id": str(appointment.client_id),
-                "date": appointment.date.isoformat(),
-                "start_time": appointment.start_time,
-                "end_time": appointment.end_time,
-                "tattoo_size": appointment.tattoo_size,
-                "tattoo_style": appointment.tattoo_style,
-                "tattoo_placement": appointment.tattoo_placement,
-                "description": appointment.description,
-                "price": appointment.price,
-                "deposit": appointment.deposit,
-                "special_instructions": appointment.special_instructions,
-                "reference_images": appointment.reference_images,
-                "status": "pending",
-            }
-        ).execute()
-
-        if not response.data:
-            raise HTTPException(
-                status_code=400,
-                detail="Failed to create appointment",
-            )
-
-        return response.data[0]
-
+        data = appointment.dict()
+        response = supabase.table("appointments").insert(data).execute()
+        if response.error:
+            logging.error(f"Supabase error: {response.error}")
+            raise HTTPException(status_code=500, detail="Failed to create appointment")
+        return {"status": "success", "data": response.data}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"Exception: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/clients/{client_id}", response_model=Client)
 async def get_client(client_id: UUID):
@@ -131,3 +112,39 @@ async def get_client_appointments(client_id: UUID):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/appointments", response_model=List[Appointment])
+async def get_appointments():
+    try:
+        response = supabase.table("appointments").select("*").execute()
+        if response.error:
+            logging.error(f"Supabase error: {response.error}")
+            raise HTTPException(status_code=500, detail="Failed to fetch appointments")
+        return response.data
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/appointments/{appointment_id}", response_model=Appointment)
+async def get_appointment(appointment_id: str):
+    try:
+        response = supabase.table("appointments").select("*").eq("id", appointment_id).single().execute()
+        if response.error:
+            logging.error(f"Supabase error: {response.error}")
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        return response.data
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.delete("/appointments/{appointment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_appointment(appointment_id: str):
+    try:
+        response = supabase.table("appointments").delete().eq("id", appointment_id).execute()
+        if response.error:
+            logging.error(f"Supabase error: {response.error}")
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        return {"status": "success"}
+    except Exception as e:
+        logging.error(f"Exception: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
