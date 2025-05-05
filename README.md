@@ -4,25 +4,25 @@
 
 1. **Copy and configure environment variables:**
    ```sh
-   cp .env.example .env.docker
-   # Edit .env.docker with your Supabase and Postgres credentials
+   cp .env.example .env
+   # Edit .env with your Supabase and Postgres credentials
    ```
 
 2. **Build and run the API and Postgres:**
    ```sh
-   docker compose up --build
+   docker-compose up --build
    ```
    - The API will be available at [http://localhost:8000](http://localhost:8000)
    - Code changes will hot-reload automatically.
 
 3. **Run tests inside the container:**
    ```sh
-   docker compose exec api pytest
+   docker-compose run --rm api pytest
    ```
 
 4. **Stop containers:**
    ```sh
-   docker compose down
+   docker-compose down
    ```
 
 ---
@@ -52,7 +52,9 @@ inkbook-api/
 ---
 
 ## ⚙️ Environment Variables
-- Use `.env.docker` for all local and CI/CD runs
+- Use `.env` for local development
+- Environment variables are passed as build args in Docker
+- CI/CD uses GitHub Secrets for environment variables
 - Example:
   ```env
   SUPABASE_URL=https://your-project.supabase.co
@@ -101,7 +103,7 @@ jobs:
         run: docker build -t inkbook-api .
       - name: Run tests in container
         run: |
-          docker run --env-file .env.docker --network host inkbook-api pytest
+          docker run --env-file .env --network host inkbook-api pytest
 ```
 
 ---

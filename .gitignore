@@ -1,6 +1,9 @@
 .cursor/
 
-# Environment variable files
-.env
-.env.*
+# API
+__pycache__/
+*.pyc
+.env*
 !.env.example
+
+venv/
