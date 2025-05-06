@@ -1,3 +1,19 @@
+import pytest
+from unittest.mock import MagicMock, patch
+
+@pytest.fixture
+def mock_supabase():
+    mock_client = MagicMock()
+    mock_table = MagicMock()
+    mock_table.insert.return_value.execute.return_value.data = [{"id": "test-client-id"}]
+    mock_table.select.return_value.eq.return_value.execute.return_value.data = [{"id": "test-client-id"}]
+    mock_client.table.return_value = mock_table
+
+    patcher = patch("db.supabase_client.get_supabase_client", return_value=mock_client)
+    patcher.start()
+    yield mock_client
+    patcher.stop()
+
 from datetime import datetime
 from uuid import UUID
 
