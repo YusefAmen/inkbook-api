@@ -1,2 +1,11 @@
-.env
 .cursor/
+
+# API
+__pycache__/
+*.pyc
+.env*
+!.env.example
+
+venv/
+
+.cursorrules

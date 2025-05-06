@@ -1,4 +1,128 @@
+# InkBook API – Backend MVP (Docker-First)
+
+## 🚀 Quick Start (Docker Compose)
+
+1. **Copy and configure environment variables:**
+   ```sh
+   cp .env.example .env
+   # Edit .env with your Supabase and Postgres credentials
+   ```
+
+2. **Build and run the API and Postgres:**
+   ```sh
+   docker-compose up --build
+   ```
+   - The API will be available at [http://localhost:8000](http://localhost:8000)
+   - Code changes will hot-reload automatically.
+
+3. **Run tests inside the container:**
+   ```sh
+   docker-compose run --rm api pytest
+   ```
+
+4. **Stop containers:**
+   ```sh
+   docker-compose down
+   ```
+
+---
+
+## 🐳 Why Docker-First?
+- Ensures dev, CI/CD, and prod all use the same environment
+- No more local Python/venv setup required
+- Fast onboarding: just install Docker and go
+- Easy to extend for microservices and Kubernetes
+
+---
+
+## 🧱 Project Structure
+
+```
+inkbook-api/
+├── Dockerfile
+├── docker-compose.yml
+├── .env.docker
+├── main.py
+├── requirements.txt
+├── routes/
+├── db/
+└── ...
+```
+
+---
+
+## ⚙️ Environment Variables
+- Use `.env` for local development
+- Environment variables are passed as build args in Docker
+- CI/CD uses GitHub Secrets for environment variables
+- Example:
+  ```env
+  SUPABASE_URL=https://your-project.supabase.co
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+  POSTGRES_USER=postgres
+  POSTGRES_PASSWORD=postgres
+  POSTGRES_DB=inkbook
+  POSTGRES_HOST=db
+  POSTGRES_PORT=5432
+  ```
+- **Never commit secrets!**
+
+---
+
+## 🧪 CI/CD (GitHub Actions Example)
+
+Add this as `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inkbook
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: docker build -t inkbook-api .
+      - name: Run tests in container
+        run: |
+          docker run --env-file .env --network host inkbook-api pytest
+```
+
+---
+
+## 📝 Notes
+- **Local Python/venv instructions are deprecated.** Use Docker Compose for all workflows.
+- For production, use a separate Dockerfile (no --reload, stricter pins).
+- For Supabase, use your cloud project or run the Supabase CLI locally and point the API to it.
+- Troubleshooting: If you hit port conflicts, stop other services or change ports in `docker-compose.yml`.
+
+---
+
+## 🆘 Support
+For support, email support@inkbook.com or join our Discord community.
+
 # InkBook API – Backend MVP
+
+  ## Python Version
+  This project requires Python 3.11.x. Use pyenv or your preferred environment manager to install and activate this version.
 
 This is the backend for **InkBook**, a SaaS platform for tattoo artists and studios. It powers client booking, image uploads, and reminder logic. The frontend is built in **Next.js**, using **Supabase** for authentication and storage, and deployed via **Vercel**.
 
@@ -60,7 +184,7 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # API Configuration
 API_HOST=0.0.0.0
@@ -332,10 +456,6 @@ This `inkbook-api` repo is currently a monolith, but its structure is designed f
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support, email support@inkbook.com or join our Discord community.
 
 
 

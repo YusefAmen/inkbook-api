@@ -43,6 +43,12 @@ app.include_router(
 if __name__ == "__main__":
     import uvicorn
 
+    # Print all registered routes for debugging
+    print("\nRegistered routes:")
+    for route in app.routes:
+        print(f"{route.path} -> {route.name} [{getattr(route, 'methods', None)}]")
+    print()
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
