@@ -52,6 +52,7 @@ class Appointment(AppointmentBase):
 # Endpoints
 @router.post("/clients/", response_model=Client)
 async def create_client(client: ClientCreate, supabase=Depends(get_supabase_client)):
+    print("create_client endpoint called with:", client)
     try:
         response = supabase.table("clients").insert(client.model_dump()).execute()
         if not response.data:
@@ -78,7 +79,7 @@ async def get_client(client_id: UUID, supabase=Depends(get_supabase_client)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/appointments", response_model=Appointment)
+@router.post("/appointments", response_model=Appointment, status_code=201)
 async def create_appointment(appointment: AppointmentCreate, supabase=Depends(get_supabase_client)):
     try:
         # Verify client exists
@@ -111,3 +112,8 @@ async def get_appointment(appointment_id: UUID, supabase=Depends(get_supabase_cl
         return response.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/debug-client/")
+async def debug_client(client: ClientBase):
+    print("debug_client called with:", client)
+    return {"ok": True, "client": client}

@@ -15,5 +15,3 @@ def get_supabase_client() -> Generator[Client, None, None]:
         
     client = create_client(url, key)
     yield client
-
-print("Supabase client created successfully!")
